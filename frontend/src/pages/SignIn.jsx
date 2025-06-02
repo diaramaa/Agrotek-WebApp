@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import toast from 'react-hot-toast';
+import authLogo from '../assets/password.png'
 
 
 export default function SignIn() {
@@ -51,7 +52,7 @@ export default function SignIn() {
           </div>
 
           <img
-            src="src/assets/password.png"
+            src={authLogo}
             alt="auth logo"
             className="w-20 h-20 mb-4"
           />

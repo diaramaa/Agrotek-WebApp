@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import agrotekLogo from '../assets/agrotek-logo.png'; 
 
 const LandingPage = () => {
   return (
@@ -7,7 +8,7 @@ const LandingPage = () => {
         <div className="w-full max-w-md mx-auto">
           <div className="flex flex-col items-center">
             <img 
-              src="src/assets/agrotek-logo.png" 
+              src={agrotekLogo}
               alt="Agrotek Logo" 
               className="w-48 h-38 mb-2"
             />
