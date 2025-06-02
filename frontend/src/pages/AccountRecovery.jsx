@@ -20,7 +20,7 @@ const AccountRecovery = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'http://localhost:3000/forgot-password/otp',
+        redirectTo: 'https://api.agrotek.web.id/forgot-password/otp',
       });
 
       if (error) {
