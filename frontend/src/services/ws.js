@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://localhost:4000");
+const socket = new WebSocket("ws://api.agrotek.web.id");
 
 export function sendCommandToMQTT(topic, message) {
   const payload = { topic, message };

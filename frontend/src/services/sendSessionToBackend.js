@@ -12,7 +12,7 @@ export async function sendSessionToBackend(device_id) {
   const access_token = session.access_token;
 
   // Kirim token + device_id ke backend
-  const res = await fetch("http://localhost:4000/session", {
+  const res = await fetch("https://api.agrotek.web.id/session", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${access_token}`,
