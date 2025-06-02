@@ -3,13 +3,14 @@ import { useEffect } from "react";
 import GreetingCard from "../components/GreetingCard";
 import DashboardCard from "../components/DashboardCard";
 import ChartCard from "../components/ChartCard";
+import PwmSliderCard from "../components/PwmSliderCard";
 import ArrowButtonGrid from "../components/ArrowButtonGrid";
 import BottomNavBar from "../components/BottomNavBar";
 import { sendSessionToBackend } from "../services/sendSessionToBackend";
 
 export default function Dashboard() {
   useEffect(() => {
-    sendSessionToBackend("prototype-02")
+    sendSessionToBackend("prototype-02");
   }, []);
 
   return (
@@ -18,9 +19,9 @@ export default function Dashboard() {
         <GreetingCard />
         <DashboardCard />
         <ChartCard />
+        <PwmSliderCard /> 
         <ArrowButtonGrid />
       </div>
-
       <BottomNavBar />
     </div>
   );
