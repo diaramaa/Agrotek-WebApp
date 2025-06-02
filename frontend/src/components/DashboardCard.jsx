@@ -9,7 +9,6 @@ export default function DashboardCard() {
   const [totalEnergy, setTotalEnergy] = useState(null);
   const [now, setNow] = useState(new Date());
 
-  // Timer untuk waktu real-time
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
@@ -87,7 +86,8 @@ export default function DashboardCard() {
       } else if (timeRange === "weekly") {
         fromDate.setDate(now.getDate() - 7);
       } else {
-        fromDate.setMonth(now.getMonth() - 1);
+        // ⬅️ Fix untuk ambil dari awal bulan
+        fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
       }
 
       const { data, error } = await supabase
@@ -114,7 +114,7 @@ export default function DashboardCard() {
           },
           (payload) => {
             if (payload.new.energy) {
-              fetchTotalEnergy(); // atau update secara lokal bila performa penting
+              fetchTotalEnergy();
             }
           }
         )
