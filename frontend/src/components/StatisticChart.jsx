@@ -22,6 +22,8 @@ export default function StatisticChart({ data, loading }) {
     }),
     energy: d.energy,
     voltage: d.voltage,
+    arus: d.current,
+    power: d.power,
   }));
 
   return (
@@ -37,6 +39,8 @@ export default function StatisticChart({ data, loading }) {
           <Tooltip />
           <Line type="monotone" dataKey="energy" stroke="#3B82F6" name="Energi (kWh)" />
           <Line type="monotone" dataKey="voltage" stroke="#10B981" name="Tegangan (V)" />
+          <Line type="monotone" dataKey="arus" stroke="#F59E0B" name="Arus (A)" />
+          <Line type="monotone" dataKey="power" stroke="#EF4444" name="Daya (W)" />
         </LineChart>
       </ResponsiveContainer>
     </div>
