@@ -4,9 +4,9 @@ import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 import { sendCommandToMQTT } from "../services/ws";
 
 export default function ArrowButtonGrid() {
-  const [activeButtons, setActiveButtons] = useState([]);   // IDs of pressed buttons
-  const touchMap    = useRef({});                           // pointerId → motor ("left" or "right")
-  const timers      = useRef({});                           // pointerId → interval ID
+  const [activeButtons, setActiveButtons] = useState([]);   
+  const touchMap    = useRef({});  // pointerId → motor ("left" or "right")
+  const timers      = useRef({});  // pointerId → interval ID
 
   // Map button ID to motor channel and command
   const getCommandById = (id) => {
@@ -31,10 +31,10 @@ export default function ArrowButtonGrid() {
     touchMap.current[pointerId] = motor;
     setActiveButtons((prev) => Array.from(new Set([...prev, btnId])));
 
-    // send immediately...
+    // send
     sendCommandToMQTT(`Agrotek/Command/${motor}`, cmd);
 
-    // ...and repeatedly every 300ms
+    // repeatedly every 300ms
     timers.current[pointerId] = setInterval(() => {
       console.log(`[interval] pointer=${pointerId}, motor=${motor}, cmd=${cmd}`);
       sendCommandToMQTT(`Agrotek/Command/${motor}`, cmd);
