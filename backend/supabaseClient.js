@@ -1,3 +1,4 @@
+// supabaseClient.js
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -13,14 +14,14 @@ async function insertSensorData(user_id, data) {
     power,
     energy,
     battery_percentage: battery,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   }]);
 
   if (error) {
-    console.error('[SUPABASE] Insert error:', error.message);
-  } else {
-    console.log(`[SUPABASE] Data saved for user ${user_id}`);
+    throw new Error(error.message); // dibiarkan dilempar agar bisa ditangkap caller
   }
+
+  console.log(`[SUPABASE] Data saved for user ${user_id}`);
 }
 
 module.exports = { insertSensorData };

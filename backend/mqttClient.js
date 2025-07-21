@@ -1,30 +1,40 @@
 const mqtt = require('mqtt');
 require('dotenv').config();
 
-const client = mqtt.connect(process.env.MQTT_BROKER); // ex: mqtt://localhost:1883
+const client = mqtt.connect(process.env.MQTT_BROKER);
 
 client.on('connect', () => {
-  console.log('Connected to MQTT Broker');
-  client.subscribe('Agrotek/Status'); // topik untuk data sensor
+  console.log('[MQTT] Connected to broker');
+  client.subscribe('Agrotek/Status', (err) => {
+    if (err) console.error('[MQTT] Subscribe error:', err.message);
+    else console.log('[MQTT] Subscribed to Agrotek/Status');
+  });
 });
 
 function publishCommand(topic, message) {
-  client.publish(topic, message);
-  console.log(`Published message: ${message} to topic: ${topic}`);
+  if (!topic || !message) {
+    console.warn('[MQTT] Missing topic or message');
+    return;
+  }
+
+  client.publish(topic, JSON.stringify(message), {}, (err) => {
+    if (err) console.error('[MQTT] Publish error:', err.message);
+    else console.log(`[MQTT] Published to ${topic}: ${JSON.stringify(message)} (${message.length} byte)`);
+  });
 }
 
-// fungsi ini menerima callback saat sensor data masuk
 function subscribeSensor(callback) {
   client.on('message', (topic, message) => {
-    if (topic === 'Agrotek/Status') {
-      try {
-        const payload = JSON.parse(message.toString());
-        const { device_id, voltage, current, power, energy, battery } = payload;
+    if (topic !== 'Agrotek/Status') return;
 
-        callback(device_id, { voltage, current, power, energy, battery });
-      } catch (err) {
-        console.error('[MQTT] JSON parse error:', err.message);
-      }
+    try {
+      const payload = JSON.parse(message.toString());
+      const { device_id, voltage, current, power, energy, battery } = payload;
+
+      if (!device_id) throw new Error('Missing device_id');
+      callback(device_id, { voltage, current, power, energy, battery });
+    } catch (err) {
+      console.error('[MQTT] Failed to parse sensor data:', err.message);
     }
   });
 }

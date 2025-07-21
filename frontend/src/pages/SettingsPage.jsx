@@ -6,7 +6,7 @@ import BottomNavBar from "../components/BottomNavBar";
 
 export default function SettingsPage() {
   const [user, setUser] = useState(null);
-  const [name, setName] = useState("");
+  const [display_name, setName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
@@ -15,7 +15,7 @@ export default function SettingsPage() {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        setName(user.user_metadata?.name || "");
+        setName(user.user_metadata?.display_name || "");
       } else {
         console.error(error);
       }
@@ -25,7 +25,7 @@ export default function SettingsPage() {
 
   const handleSaveName = async () => {
     const { error } = await supabase.auth.updateUser({
-      data: { name }
+      data: { display_name },
     });
 
     if (error) {
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                     <div className="flex gap-2">
                     <input
                         type="text"
-                        value={name}
+                        value={display_name}
                         onChange={(e) => setName(e.target.value)}
                         className="border rounded px-2 py-1 text-sm flex-1"
                     />
@@ -68,7 +68,7 @@ export default function SettingsPage() {
                     </div>
                 ) : (
                     <div className="flex justify-between items-center">
-                    <p className="text-gray-800">{name || "Not set"}</p>
+                    <p className="text-gray-800">{display_name || "Not set"}</p>
                     <button onClick={() => setIsEditing(true)} className="text-sm text-blue-500">Edit</button>
                     </div>
                 )}

@@ -19,7 +19,12 @@ export default function ArrowButtonGrid() {
     }
   };
 
-  // Begin sending commands for this pointer
+  const createCommandPayload = (cmd) => ({
+    cmd,
+    t0: Date.now(), //timestamp in milliseconds
+  });
+
+  // Kirim perintah dari pointer ID ke BE (MQTT)
   const startPress = (btnId, pointerId) => {
     const info = getCommandById(btnId);
     if (!info) return;
@@ -27,21 +32,21 @@ export default function ArrowButtonGrid() {
     const { motor, cmd } = info;
     console.log(`[startPress] pointer=${pointerId}, motor=${motor}, cmd=${cmd}`);
 
-    // track this pointer → motor
+    // simpan mapping pointerId → motor
     touchMap.current[pointerId] = motor;
     setActiveButtons((prev) => Array.from(new Set([...prev, btnId])));
 
     // send
-    sendCommandToMQTT(`Agrotek/Command/${motor}`, cmd);
+    sendCommandToMQTT(`Agrotek/Command/${motor}`, createCommandPayload(cmd));
 
-    // repeatedly every 300ms
+    // mulai interval untuk mengirim perintah setiap detik
     timers.current[pointerId] = setInterval(() => {
       console.log(`[interval] pointer=${pointerId}, motor=${motor}, cmd=${cmd}`);
-      sendCommandToMQTT(`Agrotek/Command/${motor}`, cmd);
+      sendCommandToMQTT(`Agrotek/Command/${motor}`, createCommandPayload(cmd));
     }, 1000);
   };
 
-  // Stop sending commands for this pointer
+  // Hentikan perintah dari pointer ID
   const endPress = (pointerId) => {
     const motor = touchMap.current[pointerId];
     console.log(`[endPress] pointer=${pointerId}, motor=${motor}`);
@@ -51,18 +56,18 @@ export default function ArrowButtonGrid() {
     delete timers.current[pointerId];
     delete touchMap.current[pointerId];
 
-    // send STOP for that motor
+    // Kirim perintah berhenti
     const stopCmd = motor === "left" ? "L_Stop" : "R_Stop";
     console.log(`[stop] motor=${motor}, cmd=${stopCmd}`);
-    sendCommandToMQTT(`Agrotek/Command/${motor}`, stopCmd);
+    sendCommandToMQTT(`Agrotek/Command/${motor}`, createCommandPayload(stopCmd));
 
-    // remove any button in activeButtons that controls this motor
+    // Hapus dari daftar tombol aktif
     setActiveButtons((prev) =>
       prev.filter((id) => getCommandById(id)?.motor !== motor)
     );
   };
 
-  // Touch handlers (multi-touch)
+  // Touch handlers (mobile)
   const onTouchStart = (btnId) => (e) => {
     e.preventDefault();
     console.log(`[touchstart] btn=${btnId}, count=${e.changedTouches.length}`);
@@ -71,6 +76,7 @@ export default function ArrowButtonGrid() {
     }
   };
 
+  // Hentikan semua sentuhan saat touch berakhir
   const onTouchEnd = (e) => {
     e.preventDefault();
     console.log(`[touchend] count=${e.changedTouches.length}`);

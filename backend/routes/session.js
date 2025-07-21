@@ -1,23 +1,30 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import sessionMap from '../sessionMap.js';
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const sessionMap = require('../sessionMap.js');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  const authHeader = req.headers.authorization;
+// POST /session → Simpan device_id ↔ user_id dari token
+router.post('/', (req, res) => {
+  const { authorization } = req.headers;
   const { device_id } = req.body;
 
-  if (!authHeader || !device_id) {
+  if (!authorization || !device_id) {
     return res.status(400).json({ error: 'Missing token or device_id' });
   }
 
-  const token = authHeader.split(' ')[1];
-  const decoded = jwt.decode(token);
-  const user_id = decoded?.sub;
+  const token = authorization.split(' ')[1];
 
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET); // ← ini bagian yang diperbarui
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const user_id = decoded?.sub;
   if (!user_id) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Invalid token payload' });
   }
 
   sessionMap.set(device_id, user_id);
@@ -25,4 +32,4 @@ router.post('/', async (req, res) => {
   res.json({ success: true });
 });
 
-export default router;
+module.exports = router;

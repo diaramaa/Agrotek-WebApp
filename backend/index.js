@@ -1,65 +1,91 @@
 const express = require('express');
 const cors = require('cors');
 const { WebSocketServer } = require('ws');
-const { publishCommand, subscribeSensor } = require('./mqttClient');
-const sessionMap = require('./sessionMap');
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const { performance } = require('perf_hooks');
+
+const { publishCommand, subscribeSensor } = require('./mqttClient');
 const { insertSensorData } = require('./supabaseClient');
-require('dotenv').config();
+const sessionMap = require('./sessionMap');
+const sessionRoutes = require('./routes/session');
+const adminRoutes = require('./routes/admin');
+const { default: encodeCompactTimestamp } = require('./encodeTimestamp');
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://app.agrotek.web.id',
+  origin: process.env.FRONTEND_URL,
   methods: ['GET', 'POST'],
   allowedHeaders: ['Authorization', 'Content-Type'],
 }));
-
 app.use(express.json());
+app.use('/admin', adminRoutes);
+app.use('/session', sessionRoutes);
 
-// Endpoint untuk menerima session (dari frontend)
-app.post('/session', (req, res) => {
-  const authHeader = req.headers.authorization;
-  const { device_id } = req.body;
 
-  if (!authHeader || !device_id) {
-    return res.status(400).json({ error: 'Missing token or device_id' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  const decoded = jwt.decode(token);
-  const user_id = decoded?.sub;
-
-  if (!user_id) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-
-  sessionMap.set(device_id, user_id);
-  console.log(`[SESSION] ${device_id} ↔ ${user_id}`);
-  res.json({ success: true });
-});
-
+// Start server
 const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
 
+// WebSocket handler
 const wss = new WebSocketServer({ server });
-
 wss.on('connection', (ws) => {
-  console.log('WebSocket client connected');
+  console.log('[WebSocket] Client connected');
 
   ws.on('message', (msg) => {
-    const data = JSON.parse(msg);
-    console.log('Command from client:', data);
-    publishCommand(data.topic, data.message);
+    try {
+      const data = JSON.parse(msg);
+      const { topic, message } = data;
+
+      // Handle khusus untuk PWM
+      if (topic.includes('/Command/pwm')) {
+        publishCommand(topic, message);
+        return;
+      }
+
+      // Untuk command biasa
+      const t0 = parseInt(message?.t0);
+      const t1 = Date.now();
+
+      if(!isNaN(t0)) {
+        const latency_ws = (t1 - t0);
+        console.log(`[WebSocket] Latency FE to BE: ${latency_ws} ms`);
+      }
+
+      publishCommand(topic, {
+        ...message,
+        t1: t1, // tambahkan waktu kirim dari BE
+      });
+
+      // Compact code
+      const compactMsg = encodeCompactTimestamp(message?.cmd || "UNKNOWN", t0, t1);
+      const compactTopic = topic.replace("Command", "CompactCommand");
+
+      publishCommand(compactTopic, compactMsg);
+      // console.log(`[MQTT:Compact] ${compactTopic} → "${compactMsg}" (${compactMsg.length} byte)`);
+
+    } catch (err) {
+      console.error('[WebSocket] Invalid message format:', err.message);
+    }
   });
 });
 
-// Subscribe sensor data dari MQTT
+// MQTT listener → simpan data sensor ke Supabase
 subscribeSensor(async (device_id, sensorData) => {
   const user_id = sessionMap.get(device_id);
-  if (!user_id) return console.warn(`[MQTT] No user_id for device: ${device_id}`);
+  if (!user_id) {
+    return console.warn(`[MQTT] No user_id for device: ${device_id}`);
+  }
 
-  await insertSensorData(user_id, sensorData);
+  try {
+    await insertSensorData(user_id, sensorData);
+  } catch (err) {
+    console.error(`[SUPABASE] Failed to insert data for ${user_id}:`, err.message);
+  }
 });

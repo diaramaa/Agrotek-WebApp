@@ -8,10 +8,10 @@ import authLogo from '../assets/password.png'
 export default function SignUp() {
   const navigate = useNavigate();
 
-  const [name, setName] = useState('');
   const [display_name, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [user_type, setUserType] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,8 +28,8 @@ export default function SignUp() {
         password,
         options: {
           data: { 
-            name,
-            display_name: name,
+            display_name,
+            user_type,
           },
         },
       });
@@ -95,8 +95,8 @@ export default function SignUp() {
             <input
               type="text"
               placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value) && setDisplayName(e.target.value)}
+              value={display_name}
+              onChange={(e) => setDisplayName(e.target.value)}
               required
               className="input-field"
             />
