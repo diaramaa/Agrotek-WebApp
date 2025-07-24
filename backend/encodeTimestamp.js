@@ -7,4 +7,4 @@ function encodeCompactTimestamp(cmd, t0, t1) {
   return `${cmd}|${t0_mod}|${t1_mod}`;
 }
 
-export default encodeCompactTimestamp;
+module.exports = encodeCompactTimestamp;

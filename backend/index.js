@@ -10,7 +10,8 @@ const { insertSensorData } = require('./supabaseClient');
 const sessionMap = require('./sessionMap');
 const sessionRoutes = require('./routes/session');
 const adminRoutes = require('./routes/admin');
-const { default: encodeCompactTimestamp } = require('./encodeTimestamp');
+const recordRouter = require('./routes/record');
+const encodeCompactTimestamp = require('./encodeTimestamp');
 
 dotenv.config();
 
@@ -20,12 +21,13 @@ const port = process.env.PORT || 4000;
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL,
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Authorization', 'Content-Type'],
 }));
 app.use(express.json());
 app.use('/admin', adminRoutes);
 app.use('/session', sessionRoutes);
+app.use('/record', recordRouter);
 
 
 // Start server
@@ -53,10 +55,10 @@ wss.on('connection', (ws) => {
       const t0 = parseInt(message?.t0);
       const t1 = Date.now();
 
-      if(!isNaN(t0)) {
-        const latency_ws = (t1 - t0);
-        console.log(`[WebSocket] Latency FE to BE: ${latency_ws} ms`);
-      }
+      // if(!isNaN(t0)) {
+      //   const latency_ws = (t1 - t0);
+      //   console.log(`[WebSocket] Latency FE to BE: ${latency_ws} ms`);
+      // }
 
       publishCommand(topic, {
         ...message,
@@ -64,10 +66,10 @@ wss.on('connection', (ws) => {
       });
 
       // Compact code
-      const compactMsg = encodeCompactTimestamp(message?.cmd || "UNKNOWN", t0, t1);
-      const compactTopic = topic.replace("Command", "CompactCommand");
+      // const compactMsg = encodeCompactTimestamp(message?.cmd || "UNKNOWN", t0, t1);
+      // const compactTopic = topic.replace("Command", "CompactCommand");
 
-      publishCommand(compactTopic, compactMsg);
+      // publishCommand(compactTopic, compactMsg);
       // console.log(`[MQTT:Compact] ${compactTopic} → "${compactMsg}" (${compactMsg.length} byte)`);
 
     } catch (err) {

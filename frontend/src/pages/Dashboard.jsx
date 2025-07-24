@@ -5,6 +5,7 @@ import DashboardCard from "../components/DashboardCard";
 import ChartCard from "../components/ChartCard";
 import PwmSliderCard from "../components/PwmSliderCard";
 import ArrowButtonGrid from "../components/ArrowButtonGrid";
+import RecordControl from "../components/RecordControl";
 import BottomNavBar from "../components/BottomNavBar";
 import { sendSessionToBackend } from "../services/sendSessionToBackend";
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
         <ChartCard />
         <PwmSliderCard /> 
         <ArrowButtonGrid />
+        <RecordControl />
       </div>
       <BottomNavBar />
     </div>
