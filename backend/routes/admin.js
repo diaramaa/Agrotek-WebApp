@@ -35,4 +35,37 @@ router.post('/update-user', verifyAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
+// POST /admin/sync-user-metadata
+router.post('/sync-user-metadata', verifyAdmin, async (req, res) => {
+  const { user_id } = req.body;
+  if (!user_id) {
+    return res.status(400).json({ error: 'Missing user_id' });
+  }
+
+  // Ambil data user dari Supabase Auth
+  const { data, error } = await supabase.auth.admin.getUserById(user_id);
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  const raw = data?.user?.raw_user_meta_data;
+  if (!raw) {
+    return res.status(404).json({ error: 'No raw_user_meta_data found' });
+  }
+
+  // Salin raw_user_meta_data ke user_metadata
+  const { error: updateError } = await supabase.auth.admin.updateUserById(user_id, {
+    user_metadata: {
+      user_type: raw.user_type,
+      display_name: raw.displayName,
+    },
+  });
+
+  if (updateError) {
+    return res.status(500).json({ error: updateError.message });
+  }
+
+  res.json({ success: true, message: 'user_metadata synced from raw_user_meta_data' });
+});
+
 module.exports = router;

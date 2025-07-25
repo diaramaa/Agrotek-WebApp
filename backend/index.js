@@ -11,7 +11,7 @@ const sessionMap = require('./sessionMap');
 const sessionRoutes = require('./routes/session');
 const adminRoutes = require('./routes/admin');
 const recordRouter = require('./routes/record');
-const encodeCompactTimestamp = require('./encodeTimestamp');
+// const encodeCompactTimestamp = require('./encodeTimestamp');
 
 dotenv.config();
 
